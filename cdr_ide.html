@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CDR-IED</title>
+    <style>
+        :root {
+            --bg-main: #ffffff;
+            --bg-secondary: #f0f0f0;
+            --bg-toolbar: #e0e0e0;
+            --text-primary: #000000;
+            --text-secondary: #555555;
+            --border-color: #a0a0a0;
+            --highlight: #cce5ff;
+            --highlight-border: #0099ff;
+            
+            /* Protocol Colors */
+            --proto-tcp: #6f00ff;
+            --proto-udp: #ff6600;
+            --proto-http: #00cc00;
+            --proto-dns: #ffcc00;
+            --proto-arp: #333;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 12px;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- Toolbar Area --- */
+        /* Narrow top bar above toolbar (app name) */
+        .topbar {
+            height: 28px;
+            background-color: #d0d0d0;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            border-bottom: 1px solid #bfbfbf;
+            font-weight: 600;
+            color: #222;
+            font-size: 13px;
+        }
+        .topbar .app-name { flex: 1; }
+
+        .toolbar {
+            background-color: #dcdcdc;
+            padding: 5px;
+            border-bottom: 1px solid #999;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            height: 40px;
+        }
+
+        .btn {
+            background: #fff;
+            border: 1px solid #777;
+            padding: 4px 10px;
+            cursor: pointer;
+            border-radius: 2px;
+            font-size: 11px;
+        }
+        .btn:active { background: #ddd; }
+        .btn-start { border-left: 4px solid #00cc00; padding-left: 8px;}
+        .btn-stop { border-left: 4px solid #cc0000; padding-left: 8px;}
+
+        .filter-input {
+            flex-grow: 1;
+            padding: 4px;
+            border: 1px solid #777;
+            font-family: monospace;
+        }
+
+        /* --- Main Layout Area --- */
+        .panes-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        /* Top Pane: Packet List Table */
+        .packet-list-pane {
+            flex: 3; /* Takes up roughly 45% of vertical space */
+            overflow-y: auto;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: monospace;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        thead th {
+            background-color: #eee;
+            position: sticky;
+            top: 0;
+            border-bottom: 1px solid #999;
+            padding: 4px;
+            text-align: left;
+            font-weight: normal;
+            color: #333;
+        }
+
+        tbody tr:hover { background-color: #e6f2ff; }
+        
+        tbody tr.selected {
+            background-color: var(--highlight) !important;
+            outline: 1px solid var(--highlight-border);
+        }
+
+        td { padding: 2px 4px; border-bottom: 1px solid #eee; white-space: nowrap; }
+
+        /* Protocol specific text colors */
+        .col-proto.proto-tcp { color: var(--proto-tcp); font-weight: bold; }
+        .col-proto.proto-udp { color: var(--proto-udp); font-weight: bold; }
+        .col-proto.proto-http { color: var(--proto-http); font-weight: bold; }
+        .col-proto.proto-dns { color: var(--proto-dns); }
+        .col-proto.proto-arp { color: var(--proto-arp); }
+
+        /* Split Pane Container removed: packet-bytes pane omitted */
+
+        /* Middle Pane: Packet Details */
+        .packet-details-pane {
+            flex: 1;
+            overflow-y: auto;
+            background-color: #fff;
+            padding: 10px;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tree-view ul {
+            list-style: none;
+            padding-left: 15px;
+            margin: 0;
+        }
+        
+        .tree-item {
+            margin: 2px 0;
+            cursor: pointer;
+        }
+
+        .tree-label { color: #000; font-weight: bold; }
+        .tree-value { color: #333; }
+        .field-item { margin-left: 0; }
+        .field-item ul { display: none; } /* Hide children by default for fold effect */
+        .field-item.active ul { display: block; }
+
+        /* Packet bytes styles removed (hex dump not used) */
+
+        /* --- Status Bar --- */
+        .status-bar {
+            height: 24px;
+            background-color: #dcdcdc;
+            padding: 4px 10px;
+            font-family: monospace;
+            font-size: 11px;
+            color: #333;
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid #999;
+        }
+
+        .status-bar.error {
+            background-color: #ff1a1a;
+            border-top: 1px solid #ff0000;
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        /* Modal for record details */
+        .modal { position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.35); }
+        .modal .modal-content { background: #fff; padding: 14px; border-radius: 6px; width: clamp(280px, 40%, 700px); max-width: 700px; max-height: 80%; overflow: auto; box-shadow: 0 8px 30px rgba(0,0,0,0.2); font-size: 14px; line-height: 1.4; }
+        .modal .modal-content table { width: 100%; border-collapse: collapse; }
+        .modal .modal-content td, .modal .modal-content th { padding: 8px 10px; border-bottom: 1px solid #eee; vertical-align: top; text-align: left; }
+        .modal .modal-content th { font-weight: 700; width: 30%; }
+        .modal .modal-content pre { font-family: "Courier New", monospace; white-space: pre; margin:0; }
+        .modal .modal-content .modal-body { white-space: pre-wrap; font-family: "Courier New", monospace; line-height: 1; margin:0; }
+
+    </style>
+</head>
+<body>
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+        <div class="app-name">CDR-IED : Call Detail Record Interpretation and Examination Dashboard</div>
+    </div>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+        <label class="btn btn-start" for="csvFileInput" style="cursor:pointer">Upload CDR</label>
+        <input id="csvFileInput" type="file" accept=".csv,text/csv" style="display:none">
+        </label>
+        <button class="btn btn-stop">Refresh</button>
+        <button class="btn">Analyze</button>
+        <button class="btn">Filter</button>
+        <input type="text" class="filter-input" id="filterInput" placeholder="Search">
+        <button class="btn">Apply</button>
+    </div>
+
+    <!-- MAIN AREA -->
+    <div class="panes-container">
+        
+        <!-- 1. PACKET LIST TABLE -->
+        <div class="packet-list-pane">
+            <table id="packetTable">
+                <thead>
+                    <tr>
+                        <th>Si No</th>
+                        <th>A-Party</th>
+                        <th>B-Party</th>
+                        <th>Call Type</th>
+                        <th>Start Date</th>
+                        <th>Start Time</th>
+                        <th>Duration</th>
+                        <th>IMEI</th>
+                        <th>IMSI</th>
+                        <th>Cell ID</th>
+                        <th>Call Status</th>
+                    </tr>
+                </thead>
+                <tbody id="packetBody">
+                    <!-- JS will populate this with CDR rows -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- DETAILS PANE (packet-bytes pane removed) -->
+        <div class="packet-details-pane" id="detailsPane">
+            <div style="padding: 10px; color: #777;">Select a packet to view details</div>
+        </div>
+
+    </div>
+
+    <!-- STATUS BAR -->
+    <div class="status-bar" id="statusBar">
+        <span id="statusLbl">Packets: 0</span>
+        <span id="selectionInfo">Selected: None</span>
+    </div>
+
+    <!-- DETAIL MODAL -->
+    <div id="detailModal" class="modal" style="display:none">
+        <div class="modal-content">
+            <button id="modalClose" class="btn" style="float:right">❌ Close</button>
+            <div id="modalBody" class="modal-body" style="margin-top:6px;"></div>
+        </div>
+    </div>
+
+    <script>
+        // CSV upload, parse, validate columns and render rows
+        (function(){
+            // rowsData holds parsed data rows so click handlers can access full rows
+            let rowsData = [];
+            const REQUIRED_COLS = ['A-Party','B-Party','Call Type','Start Date','Start Time','Duration','IMEI','IMSI','Cell ID','Call Status'];
+            const fileInput = document.getElementById('csvFileInput');
+            const tbody = document.getElementById('packetBody');
+            const statusLbl = document.getElementById('statusLbl');
+            const statusBar = document.getElementById('statusBar');
+            const selectionInfo = document.getElementById('selectionInfo');
+            const modal = document.getElementById('detailModal');
+            const modalBody = document.getElementById('modalBody');
+            const modalClose = document.getElementById('modalClose');
+
+            function setStatus(message, isError){
+                statusLbl.textContent = message;
+                statusBar.classList.toggle('error', !!isError);
+            }
+
+            function parseCSV(text){
+                const rows = [];
+                let cur = '';
+                let row = [];
+                let inQuotes = false;
+                for(let i=0;i<text.length;i++){
+                    const ch = text[i];
+                    if(inQuotes){
+                        if(ch === '"'){
+                            if(text[i+1] === '"'){ cur += '"'; i++; }
+                            else { inQuotes = false; }
+                        } else { cur += ch; }
+                    } else {
+                        if(ch === '"'){ inQuotes = true; }
+                        else if(ch === ','){ row.push(cur); cur = ''; }
+                        else if(ch === '\r'){ /* ignore */ }
+                        else if(ch === '\n'){ row.push(cur); rows.push(row); row = []; cur = ''; }
+                        else { cur += ch; }
+                    }
+                }
+                // push last
+                if(inQuotes){ /* malformed but still push */ }
+                if(cur !== '' || row.length > 0){ row.push(cur); rows.push(row); }
+                return rows;
+            }
+
+            function normalizeHeader(h){ return (h||'').toString().trim().toLowerCase(); }
+
+            function validateHeaders(headers){
+                const lower = headers.map(normalizeHeader);
+                const map = {};
+                REQUIRED_COLS.forEach(col => {
+                    const idx = lower.indexOf(col.toLowerCase());
+                    map[col] = idx; // -1 if missing
+                });
+                return map;
+            }
+
+            function renderRows(rows, headerMap){
+                tbody.innerHTML = '';
+                rowsData = [];
+                rows.forEach((r, i) => {
+                    const tr = document.createElement('tr');
+                    const obj = {};
+                    REQUIRED_COLS.forEach(col => {
+                        const idx = headerMap[col];
+                        obj[col] = idx >= 0 ? (r[idx] || '') : '';
+                    });
+                    rowsData.push(obj);
+                    const cells = REQUIRED_COLS.map(col => obj[col]);
+                    // prepend serial number as first cell
+                    const si = i + 1;
+                    tr.innerHTML = [`<td>${si}</td>`].concat(cells.map(c => `<td>${c}</td>`)).join('');
+                    tr.addEventListener('click', () => showDetails(i, tr));
+                    tbody.appendChild(tr);
+                });
+                setStatus(`Records: ${rows.length}`, false);
+            }
+
+            function showDetails(index, trElement){
+                // highlight selection
+                Array.from(tbody.children).forEach(r => r.classList.remove('selected'));
+                if(trElement) trElement.classList.add('selected');
+
+                const r = rowsData[index] || {};
+                const si_no = index + 1;
+                let text = `Title : ${si_no}\n---\n`;
+                REQUIRED_COLS.forEach(col => {
+                    const val = r[col] || '';
+                    text += `${col} : ${val}\n`;
+                });
+                modalBody.textContent = text;
+                modal.style.display = 'flex';
+            }
+
+            // modal close handlers
+            modalClose.addEventListener('click', () => { modal.style.display = 'none'; });
+            modal.addEventListener('click', (e) => { if(e.target === modal) modal.style.display = 'none'; });
+            document.addEventListener('keydown', (e) => { if(e.key === 'Escape') modal.style.display = 'none'; });
+
+            fileInput.addEventListener('change', (ev) => {
+                const f = ev.target.files && ev.target.files[0];
+                if(!f) return;
+                selectionInfo.textContent = `Selected: ${f.name}`;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const text = e.target.result;
+                    const rows = parseCSV(text);
+                    if(!rows || rows.length === 0){
+                        setStatus('No data found in CSV.', true);
+                        return;
+                    }
+                    const headers = rows[0].map(h => (h||'').toString().trim());
+                    const headerMap = validateHeaders(headers);
+                    const missing = REQUIRED_COLS.filter(c => headerMap[c] === -1);
+                    if(missing.length){
+                        setStatus(`Missing columns: ${missing.join(', ')}`, true);
+                        return;
+                    }
+                    const dataRows = rows.slice(1);
+                    renderRows(dataRows, headerMap);
+                };
+                reader.onerror = () => { setStatus('Failed to read file.', true); };
+                reader.readAsText(f);
+            });
+
+            // initial state
+            tbody.innerHTML = '';
+            setStatus('Records: 0', false);
+        })();
+    </script>
