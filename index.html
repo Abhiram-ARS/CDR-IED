@@ -73,6 +73,8 @@
         .btn:active { background: #ddd; }
         .btn-start { border-left: 4px solid #00cc00; padding-left: 8px;}
         .btn-stop { border-left: 4px solid #cc0000; padding-left: 8px;}
+        .btn-analyze { border-left: 4px solid #2f00ff; padding-left: 8px;}
+        .btn-filter { border-left: 4px solid #2f00ff; padding-left: 8px;}
 
         .filter-input {
             flex-grow: 1;
@@ -189,7 +191,18 @@
         .modal .modal-content td, .modal .modal-content th { padding: 8px 10px; border-bottom: 1px solid #eee; vertical-align: top; text-align: left; }
         .modal .modal-content th { font-weight: 700; width: 30%; }
         .modal .modal-content pre { font-family: "Courier New", monospace; white-space: pre; margin:0; }
-        .modal .modal-content .modal-body { white-space: pre-wrap; font-family: "Courier New", monospace; line-height: 1; margin:0; }
+        .modal .modal-content .modal-body { margin-top: 6px; }
+        .modal .search-panel { display: grid; gap: 10px; }
+        .modal .search-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .modal .search-row input[type="text"] { flex: 1 1 220px; padding: 8px 10px; border: 1px solid #bbb; border-radius: 4px; font: inherit; }
+        .modal .search-results { max-height: 280px; overflow: auto; border: 1px solid #eee; border-radius: 4px; }
+        .modal .search-results table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .modal .search-results td, .modal .search-results th { padding: 6px 8px; border-bottom: 1px solid #f0f0f0; }
+        .modal .search-results thead th { position: sticky; top: 0; background: #fafafa; }
+        .modal .filter-list { display: grid; gap: 8px; }
+        .modal .filter-list label { display: flex; gap: 8px; align-items: center; }
+
+        #filterModal .modal-content { width: clamp(280px, 32%, 460px); }
 
     </style>
 </head>
@@ -206,8 +219,8 @@
         <input id="csvFileInput" type="file" accept=".csv,text/csv" style="display:none">
         </label>
         <button class="btn btn-stop">Refresh</button>
-        <button class="btn">Analyze</button>
-        <button class="btn">Filter</button>
+        <button class="btn btn-analyze">Analyze</button>
+        <button class="btn btn-filter" id="filterBtn" type="button">Filter</button>
         <input type="text" class="filter-input" id="filterInput" placeholder="Search">
         <button class="btn">Apply</button>
     </div>
@@ -220,17 +233,17 @@
             <table id="packetTable">
                 <thead>
                     <tr>
-                        <th>Si No</th>
-                        <th>A-Party</th>
-                        <th>B-Party</th>
-                        <th>Call Type</th>
-                        <th>Start Date</th>
-                        <th>Start Time</th>
-                        <th>Duration</th>
-                        <th>IMEI</th>
-                        <th>IMSI</th>
-                        <th>Cell ID</th>
-                        <th>Call Status</th>
+                        <th><b>Si No</b></th>
+                        <th><b>A-Party</b></th>
+                        <th><b>B-Party</b></th>
+                        <th><b>Call Type</b></th>
+                        <th><b>Start Date</b></th>
+                        <th><b>Start Time</b></th>
+                        <th><b>Duration</b></th>
+                        <th><b>IMEI</b></th>
+                        <th><b>IMSI</b></th>
+                        <th><b>Cell ID</b></th>
+                        <th><b>Call Status</b></th>
                     </tr>
                 </thead>
                 <tbody id="packetBody">
@@ -256,7 +269,35 @@
     <div id="detailModal" class="modal" style="display:none">
         <div class="modal-content">
             <button id="modalClose" class="btn" style="float:right">❌ Close</button>
-            <div id="modalBody" class="modal-body" style="margin-top:6px;"></div>
+            <div id="modalBody" class="modal-body">
+                <div class="search-panel">
+                    <div><b>Search CDR</b></div>
+                    <div class="search-row">
+                        <input id="searchText" type="text" placeholder="Enter search text">
+                        <button id="searchBtn" class="btn" type="button">🔍Search</button>
+                    </div>
+                    <div id="searchResults" class="search-results"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FILTER MODAL -->
+    <div id="filterModal" class="modal" style="display:none">
+        <div class="modal-content">
+            <button id="filterModalClose" class="btn" style="float:right">❌ Close</button>
+            <div class="modal-body">
+                <div class="search-panel">
+                    <div><b>Select Filter Fields</b></div>
+                    <div class="filter-list">
+                        <label><input type="checkbox" name="filterField" value="B-Party ="> B-Party</label>
+                        <label><input type="checkbox" name="filterField" value="Call Type ="> Call Type</label>
+                        <label><input type="checkbox" name="filterField" value="Start Date ="> Start Date</label>
+                        <label><input type="checkbox" name="filterField" value="Call Status ="> Call Status</label>
+                    </div>
+                    <button id="filterApplyBtn" class="btn" type="button">Apply</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -274,10 +315,90 @@
             const modal = document.getElementById('detailModal');
             const modalBody = document.getElementById('modalBody');
             const modalClose = document.getElementById('modalClose');
+            const searchText = document.getElementById('searchText');
+            const searchBtn = document.getElementById('searchBtn');
+            const searchResults = document.getElementById('searchResults');
+            const filterBtn = document.getElementById('filterBtn');
+            const filterModal = document.getElementById('filterModal');
+            const filterModalClose = document.getElementById('filterModalClose');
+            const filterApplyBtn = document.getElementById('filterApplyBtn');
+            const filterInput = document.getElementById('filterInput');
 
             function setStatus(message, isError){
                 statusLbl.textContent = message;
                 statusBar.classList.toggle('error', !!isError);
+            }
+
+            function escapeHtml(value){
+                return (value || '').toString()
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            }
+
+            function renderSearchResults(matches, field, query){
+                if(!query){
+                    searchResults.innerHTML = '<div style="padding:10px;color:#666;">Enter a value and click Search.</div>';
+                    return;
+                }
+
+                if(!matches.length){
+                    searchResults.innerHTML = '<div style="padding:10px;color:#a00;">No matching records found.</div>';
+                    return;
+                }
+
+                const rowsHtml = matches.map((item) => {
+                    return '<tr>' +
+                        '<td>' + escapeHtml(item.si) + '</td>' +
+                        '<td>' + escapeHtml(item.row["A-Party"]) + '</td>' +
+                        '<td>' + escapeHtml(item.row["B-Party"]) + '</td>' +
+                        '<td>' + escapeHtml(item.row["Call Type"]) + '</td>' +
+                        '<td>' + escapeHtml(item.row["Start Date"]) + '</td>' +
+                        '<td>' + escapeHtml(item.row["Start Time"]) + '</td>' +
+                        '</tr>';
+                }).join('');
+
+                searchResults.innerHTML =
+                    '<div style="padding:8px 10px;background:#f8f8f8;border-bottom:1px solid #eee;">' +
+                        'Matches for <b>' + escapeHtml(field) + '</b>: <b>' + escapeHtml(query) + '</b> (' + matches.length + ')' +
+                    '</div>' +
+                    '<table>' +
+                        '<thead><tr><th>Si No</th><th>A-Party</th><th>B-Party</th><th>Call Type</th><th>Start Date</th><th>Start Time</th></tr></thead>' +
+                        '<tbody>' + rowsHtml + '</tbody>' +
+                    '</table>';
+            }
+
+            function performSearch(){
+                const field = 'B-Party';
+                const query = (searchText.value || '').trim().toLowerCase();
+                const matches = query ? rowsData.reduce((acc, row, index) => {
+                    const value = (row[field] || '').toString().toLowerCase();
+                    if(value.includes(query)){
+                        acc.push({ si: index + 1, row });
+                    }
+                    return acc;
+                }, []) : [];
+                renderSearchResults(matches, field, searchText.value.trim());
+            }
+
+            function getSelectedFilterLabels(){
+                return Array.from(document.querySelectorAll('input[name="filterField"]:checked')).map((input) => input.value);
+            }
+
+            function openFilterModal(){
+                filterModal.style.display = 'flex';
+            }
+
+            function closeFilterModal(){
+                filterModal.style.display = 'none';
+            }
+
+            function applyFilterSelection(){
+                const selected = getSelectedFilterLabels();
+                filterInput.value = selected.join(', ');
+                closeFilterModal();
             }
 
             function parseCSV(text){
@@ -345,20 +466,28 @@
                 if(trElement) trElement.classList.add('selected');
 
                 const r = rowsData[index] || {};
-                const si_no = index + 1;
-                let text = `Title : ${si_no}\n---\n`;
-                REQUIRED_COLS.forEach(col => {
-                    const val = r[col] || '';
-                    text += `${col} : ${val}\n`;
-                });
-                modalBody.textContent = text;
+                searchText.value = r['B-Party'] || '';
+                renderSearchResults([{ si: index + 1, row: r }], 'B-Party', searchText.value.trim());
                 modal.style.display = 'flex';
+                searchText.focus();
             }
 
             // modal close handlers
             modalClose.addEventListener('click', () => { modal.style.display = 'none'; });
             modal.addEventListener('click', (e) => { if(e.target === modal) modal.style.display = 'none'; });
             document.addEventListener('keydown', (e) => { if(e.key === 'Escape') modal.style.display = 'none'; });
+            searchBtn.addEventListener('click', performSearch);
+            searchText.addEventListener('keydown', (e) => {
+                if(e.key === 'Enter'){
+                    e.preventDefault();
+                    performSearch();
+                }
+            });
+
+            filterBtn.addEventListener('click', openFilterModal);
+            filterModalClose.addEventListener('click', closeFilterModal);
+            filterModal.addEventListener('click', (e) => { if(e.target === filterModal) closeFilterModal(); });
+            filterApplyBtn.addEventListener('click', applyFilterSelection);
 
             fileInput.addEventListener('change', (ev) => {
                 const f = ev.target.files && ev.target.files[0];
@@ -388,6 +517,7 @@
 
             // initial state
             tbody.innerHTML = '';
+            searchResults.innerHTML = '<div style="padding:10px;color:#666;">Click a row to open search.</div>';
             setStatus('Records: 0', false);
         })();
     </script>
