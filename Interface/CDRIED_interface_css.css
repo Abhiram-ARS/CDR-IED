@@ -1,0 +1,318 @@
+:root {
+    --bg-main: #ffffff;
+    --bg-secondary: #f0f0f0;
+    --bg-toolbar: #e0e0e0;
+    --text-primary: #000000;
+    --text-secondary: #555555;
+    --border-color: #a0a0a0;
+    --highlight: #cce5ff;
+    --highlight-border: #0099ff;
+    
+    /* Protocol Colors */
+    --proto-tcp: #6f00ff;
+    --proto-udp: #ff6600;
+    --proto-http: #00cc00;
+    --proto-dns: #ffcc00;
+    --proto-arp: #333;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 12px;
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* --- Toolbar Area --- */
+/* Narrow top bar above toolbar (app name) */
+.topbar {
+    height: 28px;
+    flex: 0 0 28px;
+    background-color: #d0d0d0;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    border-bottom: 1px solid #bfbfbf;
+    font-weight: 600;
+    color: #222;
+    font-size: 13px;
+}
+.topbar .app-name { flex: 1; }
+
+.toolbar {
+    flex: 0 0 40px;
+    background-color: #dcdcdc;
+    padding: 5px;
+    border-bottom: 1px solid #999;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 40px;
+}
+
+.btn {
+    background: #fff;
+    border: 1px solid #777;
+    padding: 4px 10px;
+    cursor: pointer;
+    border-radius: 2px;
+    font-size: 11px;
+}
+.btn:active { background: #ddd; }
+.btn-start { border-left: 4px solid #00cc00; padding-left: 8px;}
+.btn-stop { border-left: 4px solid #cc0000; padding-left: 8px;}
+.btn-statistics { border-left: 4px solid #2f00ff; padding-left: 8px;}
+.btn-filter { border-left: 4px solid #2f00ff; padding-left: 8px;}
+
+.filter-input {
+    flex-grow: 1;
+    padding: 4px;
+    border: 1px solid #777;
+    font-family: monospace;
+}
+
+/* --- Main Layout Area --- */
+.panes-container {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* Top Pane: Packet List Table */
+.packet-list-pane {
+    flex: 3 1 0;
+    min-height: 0;
+    overflow: auto;
+    border-bottom: 2px solid var(--border-color);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: monospace;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+thead th {
+    background-color: #eee;
+    position: sticky;
+    top: 0;
+    border-bottom: 1px solid #999;
+    padding: 4px;
+    text-align: left;
+    font-weight: normal;
+    color: #333;
+}
+
+tbody tr:hover { background-color: #e6f2ff; }
+
+tbody tr.selected {
+    background-color: var(--highlight) !important;
+    outline: 1px solid var(--highlight-border);
+}
+
+td { padding: 2px 4px; border-bottom: 1px solid #eee; white-space: nowrap; }
+
+/* Protocol specific text colors */
+.col-proto.proto-tcp { color: var(--proto-tcp); font-weight: bold; }
+.col-proto.proto-udp { color: var(--proto-udp); font-weight: bold; }
+.col-proto.proto-http { color: var(--proto-http); font-weight: bold; }
+.col-proto.proto-dns { color: var(--proto-dns); }
+.col-proto.proto-arp { color: var(--proto-arp); }
+
+/* Split Pane Container removed: packet-bytes pane omitted */
+
+/* Middle Pane: Packet Details */
+.packet-details-pane {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+    background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
+    padding: 12px 10px;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.details-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    border: 1px solid #d9e3ef;
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+}
+
+.details-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.details-subtitle {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #64748b;
+}
+
+.details-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.details-summary-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px;
+    min-height: 72px;
+}
+
+.details-summary-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #64748b;
+}
+
+.details-summary-value {
+    margin-top: 6px;
+    font-size: 22px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.details-statistics {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.statistics-heading {
+    width: 100%;
+    margin: 0;
+    font-size: 14px;
+    color: #0f172a;
+}
+
+.statistics-chart-card {
+    width: 190px;
+    gap: 12px;
+    background: #fff;
+    border: 1px solid #dbe3ee;
+    border-radius: 8px;
+    padding: 7px;
+    cursor: pointer;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+}
+
+.statistics-chart-card:hover {
+    border-color: #2563eb;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.18);
+}
+
+.statistics-chart-title {
+    margin: 0 0 5px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.statistics-chart-image {
+    width: 100%;
+    height: 105px;
+    display: block;
+    object-fit: cover;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+}
+
+.statistics-empty {
+    background: #fff;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 14px;
+    color: #64748b;
+    font-size: 12px;
+}
+
+.btn-compact {
+    padding: 6px 10px;
+    font-size: 11px;
+}
+
+.tree-view ul {
+    list-style: none;
+    padding-left: 15px;
+    margin: 0;
+}
+
+.tree-item {
+    margin: 2px 0;
+    cursor: pointer;
+}
+
+.tree-label { color: #000; font-weight: bold; }
+.tree-value { color: #333; }
+.field-item { margin-left: 0; }
+.field-item ul { display: none; } /* Hide children by default for fold effect */
+.field-item.active ul { display: block; }
+
+/* Packet bytes styles removed (hex dump not used) */
+
+/* --- Status Bar --- */
+.status-bar {
+    height: 24px;
+    flex: 0 0 24px;
+    background-color: #dcdcdc;
+    padding: 4px 10px;
+    font-family: monospace;
+    font-size: 11px;
+    color: #333;
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid #999;
+}
+
+.status-bar.error {
+    background-color: #ff1a1a;
+    border-top: 1px solid #ff0000;
+    color: #ffffff;
+    font-weight: 700;
+}
+
+/* Modal for record details */
+.modal { position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.35); }
+.modal .modal-content { background: #fff; padding: 14px; border-radius: 6px; width: clamp(280px, 40%, 700px); max-width: 700px; max-height: 80%; overflow: auto; box-shadow: 0 8px 30px rgba(0,0,0,0.2); font-size: 14px; line-height: 1.4; }
+.modal .modal-content table { width: 100%; border-collapse: collapse; }
+.modal .modal-content td, .modal .modal-content th { padding: 8px 10px; border-bottom: 1px solid #eee; vertical-align: top; text-align: left; }
+.modal .modal-content th { font-weight: 700; width: 30%; }
+.modal .modal-content pre { font-family: "Courier New", monospace; white-space: pre; margin:0; }
+.modal .modal-content .modal-body { margin-top: 6px; }
+.modal .search-panel { display: grid; gap: 10px; }
+.modal .search-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.modal .search-row input[type="text"] { flex: 1 1 220px; padding: 8px 10px; border: 1px solid #bbb; border-radius: 4px; font: inherit; }
+.modal .search-results { max-height: 280px; overflow: auto; border: 1px solid #eee; border-radius: 4px; }
+.modal .search-results table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.modal .search-results td, .modal .search-results th { padding: 6px 8px; border-bottom: 1px solid #f0f0f0; }
+.modal .search-results thead th { position: sticky; top: 0; background: #fafafa; }
+.modal .filter-list { display: grid; gap: 8px; }
+.modal .filter-list label { display: flex; gap: 8px; align-items: center; }
+
+#filterModal .modal-content { width: clamp(280px, 32%, 460px); }

@@ -11,7 +11,7 @@ def main():
     backend = CDRIED_backend.Functions()
     webview.create_window(
         "CDR-IED: Call Detail Record Dashboard",
-        "fend.html",
+        "Interface/CDRIED_interface.html",
         js_api=backend
     )
     webview.start()

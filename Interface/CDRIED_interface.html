@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CDR-IED</title>
+    <link rel="stylesheet" href="CDRIED_interface_css.css">
+</head>
+<body>
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+        <div class="app-name">CDR-IED : Call Detail Record Interpretation and Examination Dashboard</div>
+    </div>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+        <label class="btn btn-start" for="csvFileInput" style="cursor:pointer">Upload CDR</label>
+        <input id="csvFileInput" type="file" accept=".csv,text/csv" style="display:none">
+        </label>
+        <button class="btn btn-stop" id="refreshBtn" type="button">Refresh</button>
+        <button class="btn btn-statistics" id="statisticsBtn" type="button">Statistics</button>
+        <button class="btn btn-filter" id="filterBtn" type="button">Filter</button>
+        <input type="text" class="filter-input" id="filterInput" placeholder="Search">
+        <button class="btn" id="applySearchBtn" type="button">Apply</button>
+    </div>
+
+    <!-- MAIN AREA -->
+    <div class="panes-container">
+        
+        <!-- 1. PACKET LIST TABLE -->
+        <div class="packet-list-pane">
+            <table id="packetTable">
+                <thead>
+                    <tr>
+                        <th><b>Si No</b></th>
+                        <th><b>A-Party</b></th>
+                        <th><b>B-Party</b></th>
+                        <th><b>Call Type</b></th>
+                        <th><b>Start Date</b></th>
+                        <th><b>Start Time</b></th>
+                        <th><b>Duration</b></th>
+                        <th><b>IMEI</b></th>
+                        <th><b>IMSI</b></th>
+                        <th><b>Cell ID</b></th>
+                        <th><b>Call Status</b></th>
+                    </tr>
+                </thead>
+                <tbody id="packetBody">
+                    <!-- JS will populate this with CDR rows -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- DETAILS PANE (packet-bytes pane removed) -->
+        <div class="packet-details-pane" id="detailsPane">
+            <div class="statistics-empty">Upload a CDR file to generate statistics.</div>
+        </div>
+
+    </div>
+
+    <!-- STATUS BAR -->
+    <div class="status-bar" id="statusBar">
+        <span id="statusLbl">Packets: 0</span>
+        <span id="selectionInfo">Selected: None</span>
+    </div>
+
+    <!-- DETAIL MODAL -->
+    <div id="detailModal" class="modal" style="display:none">
+        <div class="modal-content">
+            <button id="modalClose" class="btn" style="float:right">❌ Close</button>
+            <div id="modalBody" class="modal-body">
+                <div class="search-panel">
+                    <div><b>Search CDR</b></div>
+                    <div class="search-row">
+                        <input id="searchText" type="text" placeholder="Enter search text">
+                        <button id="searchBtn" class="btn" type="button">🔍Search</button>
+                    </div>
+                    <div id="searchResults" class="search-results"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FILTER MODAL -->
+    <div id="filterModal" class="modal" style="display:none">
+        <div class="modal-content">
+            <button id="filterModalClose" class="btn" style="float:right">❌ Close</button>
+            <div class="modal-body">
+                <div class="search-panel">
+                    <div><b>Select Filter Fields</b></div>
+                    <div class="filter-list">
+                        <label><input type="checkbox" name="filterField" value="B-Party"> B-Party</label>
+                        <label><input type="checkbox" name="filterField" value="Call Type"> Call Type</label>
+                        <label><input type="checkbox" name="filterField" value="Start Date"> Start Date</label>
+                        <label><input type="checkbox" name="filterField" value="Call Status"> Call Status</label>
+                    </div>
+                    <button id="filterApplyBtn" class="btn" type="button">Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="CDRIED_interface_script.js"></script>
