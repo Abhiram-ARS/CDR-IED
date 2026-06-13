@@ -409,7 +409,7 @@ class Statistics:
 
         command = [
             sys.executable,
-            str(Path(__file__).resolve()),
+            str(Path(__file__).resolve().parent / 'app.py'),
             '--matplotlib-statistic',
             statistic_id,
             str(Path(db_path).resolve()),
