@@ -41,6 +41,7 @@
         /* Narrow top bar above toolbar (app name) */
         .topbar {
             height: 28px;
+            flex: 0 0 28px;
             background-color: #d0d0d0;
             display: flex;
             align-items: center;
@@ -53,6 +54,7 @@
         .topbar .app-name { flex: 1; }
 
         .toolbar {
+            flex: 0 0 40px;
             background-color: #dcdcdc;
             padding: 5px;
             border-bottom: 1px solid #999;
@@ -73,7 +75,7 @@
         .btn:active { background: #ddd; }
         .btn-start { border-left: 4px solid #00cc00; padding-left: 8px;}
         .btn-stop { border-left: 4px solid #cc0000; padding-left: 8px;}
-        .btn-analyze { border-left: 4px solid #2f00ff; padding-left: 8px;}
+        .btn-statistics { border-left: 4px solid #2f00ff; padding-left: 8px;}
         .btn-filter { border-left: 4px solid #2f00ff; padding-left: 8px;}
 
         .filter-input {
@@ -87,13 +89,16 @@
         .panes-container {
             display: flex;
             flex-direction: column;
-            height: 100%;
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow: hidden;
         }
 
         /* Top Pane: Packet List Table */
         .packet-list-pane {
-            flex: 3; /* Takes up roughly 45% of vertical space */
-            overflow-y: auto;
+            flex: 3 1 0;
+            min-height: 0;
+            overflow: auto;
             border-bottom: 2px solid var(--border-color);
         }
 
@@ -136,13 +141,127 @@
 
         /* Middle Pane: Packet Details */
         .packet-details-pane {
-            flex: 1;
+            flex: 1 1 0;
+            min-height: 0;
             overflow-y: auto;
-            background-color: #fff;
-            padding: 10px;
+            background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
+            padding: 12px 10px;
             border-bottom: 2px solid var(--border-color);
             display: flex;
             flex-direction: column;
+            gap: 12px;
+        }
+
+        .details-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 12px;
+            border: 1px solid #d9e3ef;
+            border-radius: 12px;
+            background: #ffffff;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+        }
+
+        .details-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .details-subtitle {
+            margin-top: 4px;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .details-summary {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .details-summary-card {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px;
+            min-height: 72px;
+        }
+
+        .details-summary-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #64748b;
+        }
+
+        .details-summary-value {
+            margin-top: 6px;
+            font-size: 22px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .details-statistics {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .statistics-heading {
+            width: 100%;
+            margin: 0;
+            font-size: 14px;
+            color: #0f172a;
+        }
+
+        .statistics-chart-card {
+            width: 190px;
+            gap: 12px;
+            background: #fff;
+            border: 1px solid #dbe3ee;
+            border-radius: 8px;
+            padding: 7px;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+        }
+
+        .statistics-chart-card:hover {
+            border-color: #2563eb;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.18);
+        }
+
+        .statistics-chart-title {
+            margin: 0 0 5px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .statistics-chart-image {
+            width: 100%;
+            height: 105px;
+            display: block;
+            object-fit: cover;
+            border: 1px solid #e2e8f0;
+            background: #fff;
+        }
+
+        .statistics-empty {
+            background: #fff;
+            border: 1px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 14px;
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        .btn-compact {
+            padding: 6px 10px;
+            font-size: 11px;
         }
 
         .tree-view ul {
@@ -167,6 +286,7 @@
         /* --- Status Bar --- */
         .status-bar {
             height: 24px;
+            flex: 0 0 24px;
             background-color: #dcdcdc;
             padding: 4px 10px;
             font-family: monospace;
@@ -218,11 +338,11 @@
         <label class="btn btn-start" for="csvFileInput" style="cursor:pointer">Upload CDR</label>
         <input id="csvFileInput" type="file" accept=".csv,text/csv" style="display:none">
         </label>
-        <button class="btn btn-stop">Refresh</button>
-        <button class="btn btn-analyze">Analyze</button>
+        <button class="btn btn-stop" id="refreshBtn" type="button">Refresh</button>
+        <button class="btn btn-statistics" id="statisticsBtn" type="button">Statistics</button>
         <button class="btn btn-filter" id="filterBtn" type="button">Filter</button>
         <input type="text" class="filter-input" id="filterInput" placeholder="Search">
-        <button class="btn">Apply</button>
+        <button class="btn" id="applySearchBtn" type="button">Apply</button>
     </div>
 
     <!-- MAIN AREA -->
@@ -254,7 +374,7 @@
 
         <!-- DETAILS PANE (packet-bytes pane removed) -->
         <div class="packet-details-pane" id="detailsPane">
-            <div style="padding: 10px; color: #777;">Select a packet to view details</div>
+            <div class="statistics-empty">Upload a CDR file to generate statistics.</div>
         </div>
 
     </div>
@@ -290,10 +410,10 @@
                 <div class="search-panel">
                     <div><b>Select Filter Fields</b></div>
                     <div class="filter-list">
-                        <label><input type="checkbox" name="filterField" value="B-Party ="> B-Party</label>
-                        <label><input type="checkbox" name="filterField" value="Call Type ="> Call Type</label>
-                        <label><input type="checkbox" name="filterField" value="Start Date ="> Start Date</label>
-                        <label><input type="checkbox" name="filterField" value="Call Status ="> Call Status</label>
+                        <label><input type="checkbox" name="filterField" value="B-Party"> B-Party</label>
+                        <label><input type="checkbox" name="filterField" value="Call Type"> Call Type</label>
+                        <label><input type="checkbox" name="filterField" value="Start Date"> Start Date</label>
+                        <label><input type="checkbox" name="filterField" value="Call Status"> Call Status</label>
                     </div>
                     <button id="filterApplyBtn" class="btn" type="button">Apply</button>
                 </div>
@@ -302,11 +422,13 @@
     </div>
 
     <script>
-        // CSV upload, parse, validate columns and render rows
+       
         (function(){
-            // rowsData holds parsed data rows so click handlers can access full rows
+            // rowsData holds parsed data rows from Python backend
             let rowsData = [];
             const REQUIRED_COLS = ['A-Party','B-Party','Call Type','Start Date','Start Time','Duration','IMEI','IMSI','Cell ID','Call Status'];
+            
+            // DOM element references
             const fileInput = document.getElementById('csvFileInput');
             const tbody = document.getElementById('packetBody');
             const statusLbl = document.getElementById('statusLbl');
@@ -323,6 +445,11 @@
             const filterModalClose = document.getElementById('filterModalClose');
             const filterApplyBtn = document.getElementById('filterApplyBtn');
             const filterInput = document.getElementById('filterInput');
+            const applySearchBtn = document.getElementById('applySearchBtn');
+            const refreshBtn = document.getElementById('refreshBtn');
+            const statisticsBtn = document.getElementById('statisticsBtn');
+            const detailsPane = document.getElementById('detailsPane');
+            // ============ UI Utility Functions ============
 
             function setStatus(message, isError){
                 statusLbl.textContent = message;
@@ -372,15 +499,17 @@
 
             function performSearch(){
                 const field = 'B-Party';
-                const query = (searchText.value || '').trim().toLowerCase();
-                const matches = query ? rowsData.reduce((acc, row, index) => {
-                    const value = (row[field] || '').toString().toLowerCase();
-                    if(value.includes(query)){
-                        acc.push({ si: index + 1, row });
-                    }
-                    return acc;
-                }, []) : [];
-                renderSearchResults(matches, field, searchText.value.trim());
+                const query = searchText.value.trim();
+                if(!query){
+                    searchResults.innerHTML = '<div style="padding:10px;color:#666;">Enter a value and click Search.</div>';
+                    return;
+                }
+                // Call Python backend to search
+                window.pywebview.api.search_by_field(field, query).then(matches => {
+                    renderSearchResults(matches, field, query);
+                }).catch(err => {
+                    searchResults.innerHTML = '<div style="padding:10px;color:#a00;">Error performing search: ' + escapeHtml(err) + '</div>';
+                });
             }
 
             function getSelectedFilterLabels(){
@@ -397,63 +526,101 @@
 
             function applyFilterSelection(){
                 const selected = getSelectedFilterLabels();
-                filterInput.value = selected.join(', ');
+                filterInput.value = selected.map((field) => field + ' = ').join(', ');
                 closeFilterModal();
+                filterInput.focus();
             }
 
-            function parseCSV(text){
-                const rows = [];
-                let cur = '';
-                let row = [];
-                let inQuotes = false;
-                for(let i=0;i<text.length;i++){
-                    const ch = text[i];
-                    if(inQuotes){
-                        if(ch === '"'){
-                            if(text[i+1] === '"'){ cur += '"'; i++; }
-                            else { inQuotes = false; }
-                        } else { cur += ch; }
-                    } else {
-                        if(ch === '"'){ inQuotes = true; }
-                        else if(ch === ','){ row.push(cur); cur = ''; }
-                        else if(ch === '\r'){ /* ignore */ }
-                        else if(ch === '\n'){ row.push(cur); rows.push(row); row = []; cur = ''; }
-                        else { cur += ch; }
+            function applyDisplayedFilters(){
+                const expression = filterInput.value.trim();
+                window.pywebview.api.filter_records(expression).then(result => {
+                    if(!result.success){
+                        setStatus(result.error, true);
+                        return;
                     }
-                }
-                // push last
-                if(inQuotes){ /* malformed but still push */ }
-                if(cur !== '' || row.length > 0){ row.push(cur); rows.push(row); }
-                return rows;
-            }
 
-            function normalizeHeader(h){ return (h||'').toString().trim().toLowerCase(); }
-
-            function validateHeaders(headers){
-                const lower = headers.map(normalizeHeader);
-                const map = {};
-                REQUIRED_COLS.forEach(col => {
-                    const idx = lower.indexOf(col.toLowerCase());
-                    map[col] = idx; // -1 if missing
+                    renderRows(result.data);
+                    setStatus(`Showing ${result.count} of ${result.total} records`, false);
+                    selectionInfo.textContent = `Filters: ${result.filter_count}`;
+                }).catch(err => {
+                    setStatus('Error applying filters: ' + err, true);
                 });
-                return map;
             }
+
+            function clearDisplayedFilters(){
+                filterInput.value = '';
+                window.pywebview.api.get_all_records().then(result => {
+                    renderRows(result.data);
+                    selectionInfo.textContent = 'Selected: None';
+                }).catch(err => {
+                    setStatus('Error refreshing records: ' + err, true);
+                });
+            }
+
+            function openStatisticsWindow(statisticId){
+                window.pywebview.api.open_statistics_window(statisticId).then(result => {
+                    if(!result.success){
+                        setStatus(result.error, true);
+                    }
+                }).catch(err => {
+                    setStatus('Error opening Matplotlib window: ' + err, true);
+                });
+            }
+
+            function renderStatistics(statistics){
+                if(!statistics || !statistics.length){
+                    detailsPane.innerHTML =
+                        '<div class="statistics-empty">No statistics images are available.</div>';
+                    return;
+                }
+
+                const cards = statistics.map((statistic) => {
+                    return '<button class="statistics-chart-card" type="button" ' +
+                        'data-statistic-id="' + escapeHtml(statistic.id) + '" ' +
+                        'title="Open interactive Matplotlib window">' +
+                        '<div class="statistics-chart-title">' +
+                            escapeHtml(statistic.title) +
+                        '</div>' +
+                        '<img class="statistics-chart-image" src="' +
+                            escapeHtml(statistic.preview) +
+                            '" alt="' + escapeHtml(statistic.title) + '">' +
+                    '</button>';
+                }).join('');
+
+                detailsPane.innerHTML =
+                    '<div class="details-statistics">' +
+                        '<h2 class="statistics-heading">Statistics</h2>' +
+                        cards +
+                    '</div>';
+
+                detailsPane.querySelectorAll('[data-statistic-id]').forEach((card) => {
+                    card.addEventListener('click', () => {
+                        openStatisticsWindow(card.dataset.statisticId);
+                    });
+                });
+            }
+
+            function loadStatistics(){
+                window.pywebview.api.get_statistics().then(result => {
+                    renderStatistics(result.statistics);
+                }).catch(err => {
+                    setStatus('Error loading statistics: ' + err, true);
+                });
+            }
+
+            // ============ Event Handlers ============
 
             function renderRows(rows, headerMap){
                 tbody.innerHTML = '';
-                rowsData = [];
+                rowsData = rows || [];
                 rows.forEach((r, i) => {
                     const tr = document.createElement('tr');
-                    const obj = {};
-                    REQUIRED_COLS.forEach(col => {
-                        const idx = headerMap[col];
-                        obj[col] = idx >= 0 ? (r[idx] || '') : '';
-                    });
-                    rowsData.push(obj);
-                    const cells = REQUIRED_COLS.map(col => obj[col]);
+                    const obj = r; // Data is already processed by Python
+                    rowsData[i] = obj;
+                    const cells = REQUIRED_COLS.map(col => obj[col] || '');
                     // prepend serial number as first cell
                     const si = i + 1;
-                    tr.innerHTML = [`<td>${si}</td>`].concat(cells.map(c => `<td>${c}</td>`)).join('');
+                    tr.innerHTML = [`<td>${si}</td>`].concat(cells.map(c => `<td>${escapeHtml(c)}</td>`)).join('');
                     tr.addEventListener('click', () => showDetails(i, tr));
                     tbody.appendChild(tr);
                 });
@@ -488,6 +655,15 @@
             filterModalClose.addEventListener('click', closeFilterModal);
             filterModal.addEventListener('click', (e) => { if(e.target === filterModal) closeFilterModal(); });
             filterApplyBtn.addEventListener('click', applyFilterSelection);
+            applySearchBtn.addEventListener('click', applyDisplayedFilters);
+            refreshBtn.addEventListener('click', clearDisplayedFilters);
+            statisticsBtn.addEventListener('click', loadStatistics);
+            filterInput.addEventListener('keydown', (e) => {
+                if(e.key === 'Enter'){
+                    e.preventDefault();
+                    applyDisplayedFilters();
+                }
+            });
 
             fileInput.addEventListener('change', (ev) => {
                 const f = ev.target.files && ev.target.files[0];
@@ -496,20 +672,18 @@
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const text = e.target.result;
-                    const rows = parseCSV(text);
-                    if(!rows || rows.length === 0){
-                        setStatus('No data found in CSV.', true);
-                        return;
-                    }
-                    const headers = rows[0].map(h => (h||'').toString().trim());
-                    const headerMap = validateHeaders(headers);
-                    const missing = REQUIRED_COLS.filter(c => headerMap[c] === -1);
-                    if(missing.length){
-                        setStatus(`Missing columns: ${missing.join(', ')}`, true);
-                        return;
-                    }
-                    const dataRows = rows.slice(1);
-                    renderRows(dataRows, headerMap);
+                    // Call Python backend to process CSV
+                    window.pywebview.api.process_csv_data(text).then(result => {
+                        if(!result.success){
+                            setStatus(result.error, true);
+                            return;
+                        }
+                        // Store data and render rows
+                        renderRows(result.data, null); // Pass null for headerMap since data is already processed
+                        renderStatistics(result.statistics);
+                    }).catch(err => {
+                        setStatus('Error processing CSV: ' + err, true);
+                    });
                 };
                 reader.onerror = () => { setStatus('Failed to read file.', true); };
                 reader.readAsText(f);
@@ -519,5 +693,11 @@
             tbody.innerHTML = '';
             searchResults.innerHTML = '<div style="padding:10px;color:#666;">Click a row to open search.</div>';
             setStatus('Records: 0', false);
+            
+            // Wait for pywebview API to be ready
+            window.addEventListener('pywebviewready', () => {
+                console.log('PyWebView API is ready');
+                setStatus('Ready. Upload a CSV file to get started.', false);
+            });
         })();
     </script>
