@@ -15,15 +15,17 @@
     const modalClose = document.getElementById('modalClose');
     const searchText = document.getElementById('searchText');
     const searchBtn = document.getElementById('searchBtn');
+    const searchColumns = document.getElementById('searchColumns');
     const searchResults = document.getElementById('searchResults');
     const filterBtn = document.getElementById('filterBtn');
     const filterModal = document.getElementById('filterModal');
     const filterModalClose = document.getElementById('filterModalClose');
     const filterApplyBtn = document.getElementById('filterApplyBtn');
+    const filterFieldList = document.getElementById('filterFieldList');
     const filterInput = document.getElementById('filterInput');
     const applySearchBtn = document.getElementById('applySearchBtn');
     const refreshBtn = document.getElementById('refreshBtn');
-    const statisticsBtn = document.getElementById('statisticsBtn');
+    const pdfExportBtn = document.getElementById('pdfExportBtn');
     const detailsPane = document.getElementById('detailsPane');
     // ============ UI Utility Functions ============
 
@@ -52,15 +54,17 @@
             return;
         }
 
+        const headings = ['Si No'].concat(REQUIRED_COLS);
+        const headingHtml = headings.map((heading) => {
+            return '<th>' + escapeHtml(heading) + '</th>';
+        }).join('');
         const rowsHtml = matches.map((item) => {
-            return '<tr>' +
-                '<td>' + escapeHtml(item.si) + '</td>' +
-                '<td>' + escapeHtml(item.row["A-Party"]) + '</td>' +
-                '<td>' + escapeHtml(item.row["B-Party"]) + '</td>' +
-                '<td>' + escapeHtml(item.row["Call Type"]) + '</td>' +
-                '<td>' + escapeHtml(item.row["Start Date"]) + '</td>' +
-                '<td>' + escapeHtml(item.row["Start Time"]) + '</td>' +
-                '</tr>';
+            const values = [item.si].concat(
+                REQUIRED_COLS.map((column) => item.row[column] || '')
+            );
+            return '<tr>' + values.map((value) => {
+                return '<td>' + escapeHtml(value) + '</td>';
+            }).join('') + '</tr>';
         }).join('');
 
         searchResults.innerHTML =
@@ -68,9 +72,49 @@
                 'Matches for <b>' + escapeHtml(field) + '</b>: <b>' + escapeHtml(query) + '</b> (' + matches.length + ')' +
             '</div>' +
             '<table>' +
-                '<thead><tr><th>Si No</th><th>A-Party</th><th>B-Party</th><th>Call Type</th><th>Start Date</th><th>Start Time</th></tr></thead>' +
-                '<tbody>' + rowsHtml + '</tbody>' +
-            '</table>';
+                        '<thead><tr>' + headingHtml + '</tr></thead>' +
+                        '<tbody>' + rowsHtml + '</tbody>' +
+                    '</table>';
+    }
+
+    function renderSearchColumns(row){
+        const rowsHtml = REQUIRED_COLS.map((column) => {
+            return '<tr>' +
+                '<th>' + escapeHtml(column) + '</th>' +
+                '<td class="search-copy-value">' + escapeHtml(row[column] || '') + '</td>' +
+                '<td><button class="btn search-copy-btn" type="button" ' +
+                    'data-copy-column="' + escapeHtml(column) + '">Copy</button></td>' +
+            '</tr>';
+        }).join('');
+
+        searchColumns.innerHTML =
+            '<div style="padding:8px 10px;background:#f8f8f8;border-bottom:1px solid #eee;">' +
+                'Selected record columns' +
+            '</div>' +
+            '<table><tbody>' + rowsHtml + '</tbody></table>';
+
+        searchColumns.querySelectorAll('[data-copy-column]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const column = button.dataset.copyColumn;
+                const value = String(row[column] || '');
+                const showCopied = () => {
+                    button.textContent = 'Copied';
+                    setTimeout(() => { button.textContent = 'Copy'; }, 1000);
+                };
+                const fallbackCopy = () => {
+                    searchText.value = value;
+                    searchText.select();
+                    document.execCommand('copy');
+                    showCopied();
+                };
+
+                if(navigator.clipboard && navigator.clipboard.writeText){
+                    navigator.clipboard.writeText(value).then(showCopied).catch(fallbackCopy);
+                } else {
+                    fallbackCopy();
+                }
+            });
+        });
     }
 
     function performSearch(){
@@ -143,14 +187,12 @@
         });
     }
 
-    function renderStatistics(statistics){
+    function renderStatisticsCards(statistics){
         if(!statistics || !statistics.length){
-            detailsPane.innerHTML =
-                '<div class="statistics-empty">No statistics images are available.</div>';
-            return;
+            return '<div class="statistics-empty">No statistics images are available.</div>';
         }
 
-        const cards = statistics.map((statistic) => {
+        return statistics.map((statistic) => {
             return '<button class="statistics-chart-card" type="button" ' +
                 'data-statistic-id="' + escapeHtml(statistic.id) + '" ' +
                 'title="Open interactive Matplotlib window">' +
@@ -162,11 +204,44 @@
                     '" alt="' + escapeHtml(statistic.title) + '">' +
             '</button>';
         }).join('');
+    }
 
+    function renderAlertCards(alerts){
+        if(!alerts || !alerts.length){
+            return '<div class="statistics-empty">No suspicious activity detected.</div>';
+        }
+
+        return '<div class="alerts-list">' + alerts.map((alert) => {
+            const severityClass = alert.severity === 'High' ? ' alert-high' : '';
+            return '<div class="alert-card' + severityClass + '">' +
+                '<div class="alert-title">' +
+                    '<span>B-Party: ' + escapeHtml(alert.b_party) + '</span>' +
+                    '<span class="alert-severity">' + escapeHtml(alert.severity) + '</span>' +
+                '</div>' +
+                '<div class="alert-detail">' + escapeHtml(alert.message) + '</div>' +
+                '<div class="alert-detail"><b>IMEI:</b> ' +
+                    escapeHtml(alert.imeis.join(', ') || 'Not available') + '</div>' +
+                '<div class="alert-detail"><b>IMSI:</b> ' +
+                    escapeHtml(alert.imsis.join(', ') || 'Not available') + '</div>' +
+                '<div class="alert-detail"><b>Records:</b> ' +
+                    escapeHtml(alert.record_count) + '</div>' +
+            '</div>';
+        }).join('') + '</div>';
+    }
+
+    function renderDetailsDashboard(statistics, alerts){
         detailsPane.innerHTML =
-            '<div class="details-statistics">' +
-                '<h2 class="statistics-heading">Statistics</h2>' +
-                cards +
+            '<div class="details-dashboard">' +
+                '<section class="details-section">' +
+                    '<h2 class="details-section-heading">Statistics</h2>' +
+                    '<div class="details-statistics">' +
+                        renderStatisticsCards(statistics) +
+                    '</div>' +
+                '</section>' +
+                '<section class="details-section">' +
+                    '<h2 class="details-section-heading">Suspicious Detections / Alerts</h2>' +
+                    renderAlertCards(alerts) +
+                '</section>' +
             '</div>';
 
         detailsPane.querySelectorAll('[data-statistic-id]').forEach((card) => {
@@ -176,12 +251,21 @@
         });
     }
 
-    function loadStatistics(){
-        window.pywebview.api.get_statistics().then(result => {
-            renderStatistics(result.statistics);
-        }).catch(err => {
-            setStatus('Error loading statistics: ' + err, true);
-        });
+    async function exportDisplayedPdf(){
+        const displayedRecords = rowsData;
+        const activeFilters = { expression: filterInput.value.trim() };
+
+        try {
+            const result = await window.pywebview.api.export_cdr_pdf(displayedRecords, activeFilters);
+            if(!result.success){
+                setStatus(result.error || 'Unable to export PDF.', true);
+                return;
+            }
+            setStatus('PDF exported: ' + result.path, false);
+            window.alert('PDF export completed successfully.\n\nSaved to:\n' + result.path);
+        } catch(err) {
+            setStatus('Error exporting PDF: ' + err, true);
+        }
     }
 
     // ============ Event Handlers ============
@@ -210,7 +294,9 @@
 
         const r = rowsData[index] || {};
         searchText.value = r['B-Party'] || '';
-        renderSearchResults([{ si: index + 1, row: r }], 'B-Party', searchText.value.trim());
+        renderSearchColumns(r);
+        searchResults.innerHTML =
+            '<div style="padding:10px;color:#666;">Click Search to find matching B-Party records.</div>';
         modal.style.display = 'flex';
         searchText.focus();
     }
@@ -233,7 +319,7 @@
     filterApplyBtn.addEventListener('click', applyFilterSelection);
     applySearchBtn.addEventListener('click', applyDisplayedFilters);
     refreshBtn.addEventListener('click', clearDisplayedFilters);
-    statisticsBtn.addEventListener('click', loadStatistics);
+    pdfExportBtn.addEventListener('click', exportDisplayedPdf);
     filterInput.addEventListener('keydown', (e) => {
         if(e.key === 'Enter'){
             e.preventDefault();
@@ -256,7 +342,7 @@
                 }
                 // Store data and render rows
                 renderRows(result.data, null); // Pass null for headerMap since data is already processed
-                renderStatistics(result.statistics);
+                renderDetailsDashboard(result.statistics, result.alerts);
             }).catch(err => {
                 setStatus('Error processing CSV: ' + err, true);
             });
@@ -266,8 +352,15 @@
     });
 
     // initial state
+    filterFieldList.innerHTML = REQUIRED_COLS.map((column) => {
+        return '<label><input type="checkbox" name="filterField" value="' +
+            escapeHtml(column) + '"> ' + escapeHtml(column) + '</label>';
+    }).join('');
     tbody.innerHTML = '';
-    searchResults.innerHTML = '<div style="padding:10px;color:#666;">Click a row to open search.</div>';
+    searchColumns.innerHTML =
+        '<div style="padding:10px;color:#666;">Click a record to view all columns.</div>';
+    searchResults.innerHTML =
+        '<div style="padding:10px;color:#666;">Search results will appear here.</div>';
     setStatus('Records: 0', false);
     
     // Wait for pywebview API to be ready

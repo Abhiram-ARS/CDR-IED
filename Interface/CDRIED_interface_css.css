@@ -68,8 +68,8 @@ body {
 .btn:active { background: #ddd; }
 .btn-start { border-left: 4px solid #00cc00; padding-left: 8px;}
 .btn-stop { border-left: 4px solid #cc0000; padding-left: 8px;}
-.btn-statistics { border-left: 4px solid #2f00ff; padding-left: 8px;}
 .btn-filter { border-left: 4px solid #2f00ff; padding-left: 8px;}
+.btn-export { border-left: 4px solid #008c99; padding-left: 8px;}
 
 .filter-input {
     flex-grow: 1;
@@ -197,6 +197,22 @@ td { padding: 2px 4px; border-bottom: 1px solid #eee; white-space: nowrap; }
     color: #0f172a;
 }
 
+.details-dashboard {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px;
+    min-height: 0;
+}
+
+.details-section {
+    min-width: 0;
+    border: 1px solid #dbe3ee;
+    border-radius: 10px;
+    padding: 10px;
+    background: #fff;
+    overflow: auto;
+}
+
 .details-statistics {
     display: flex;
     align-items: flex-start;
@@ -204,9 +220,9 @@ td { padding: 2px 4px; border-bottom: 1px solid #eee; white-space: nowrap; }
     flex-wrap: wrap;
 }
 
-.statistics-heading {
+.details-section-heading {
     width: 100%;
-    margin: 0;
+    margin: 0 0 10px;
     font-size: 14px;
     color: #0f172a;
 }
@@ -250,6 +266,49 @@ td { padding: 2px 4px; border-bottom: 1px solid #eee; white-space: nowrap; }
     padding: 14px;
     color: #64748b;
     font-size: 12px;
+}
+
+.alerts-list {
+    display: grid;
+    gap: 8px;
+}
+
+.alert-card {
+    border: 1px solid #fecaca;
+    border-left: 4px solid #f59e0b;
+    border-radius: 6px;
+    padding: 8px;
+    background: #fff7ed;
+}
+
+.alert-card.alert-high {
+    border-left-color: #dc2626;
+    background: #fef2f2;
+}
+
+.alert-title {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-weight: 700;
+    color: #7f1d1d;
+}
+
+.alert-severity {
+    font-size: 10px;
+    text-transform: uppercase;
+}
+
+.alert-detail {
+    margin-top: 5px;
+    color: #475569;
+    word-break: break-word;
+}
+
+@media (max-width: 760px) {
+    .details-dashboard {
+        grid-template-columns: 1fr;
+    }
 }
 
 .btn-compact {
@@ -307,7 +366,13 @@ td { padding: 2px 4px; border-bottom: 1px solid #eee; white-space: nowrap; }
 .modal .modal-content .modal-body { margin-top: 6px; }
 .modal .search-panel { display: grid; gap: 10px; }
 .modal .search-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.modal .search-field-label { padding: 8px 10px; border: 1px solid #bbb; border-radius: 4px; background: #f3f4f6; font-weight: 700; }
 .modal .search-row input[type="text"] { flex: 1 1 220px; padding: 8px 10px; border: 1px solid #bbb; border-radius: 4px; font: inherit; }
+.modal .search-columns { max-height: 280px; overflow: auto; border: 1px solid #eee; border-radius: 4px; }
+.modal .search-columns table { cursor: default; }
+.modal .search-columns th { width: 30%; font-weight: 700; }
+.modal .search-copy-value { user-select: text; cursor: text; white-space: normal; word-break: break-all; }
+.modal .search-copy-btn { min-width: 52px; }
 .modal .search-results { max-height: 280px; overflow: auto; border: 1px solid #eee; border-radius: 4px; }
 .modal .search-results table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .modal .search-results td, .modal .search-results th { padding: 6px 8px; border-bottom: 1px solid #f0f0f0; }

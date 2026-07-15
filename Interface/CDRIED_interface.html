@@ -19,10 +19,10 @@
         <input id="csvFileInput" type="file" accept=".csv,text/csv" style="display:none">
         </label>
         <button class="btn btn-stop" id="refreshBtn" type="button">Refresh</button>
-        <button class="btn btn-statistics" id="statisticsBtn" type="button">Statistics</button>
         <button class="btn btn-filter" id="filterBtn" type="button">Filter</button>
         <input type="text" class="filter-input" id="filterInput" placeholder="Search">
         <button class="btn" id="applySearchBtn" type="button">Apply</button>
+        <button class="btn btn-export" id="pdfExportBtn" type="button">Export PDF</button>
     </div>
 
     <!-- MAIN AREA -->
@@ -73,9 +73,11 @@
                 <div class="search-panel">
                     <div><b>Search CDR</b></div>
                     <div class="search-row">
+                        <span class="search-field-label">B-Party</span>
                         <input id="searchText" type="text" placeholder="Enter search text">
                         <button id="searchBtn" class="btn" type="button">🔍Search</button>
                     </div>
+                    <div id="searchColumns" class="search-columns"></div>
                     <div id="searchResults" class="search-results"></div>
                 </div>
             </div>
@@ -89,12 +91,7 @@
             <div class="modal-body">
                 <div class="search-panel">
                     <div><b>Select Filter Fields</b></div>
-                    <div class="filter-list">
-                        <label><input type="checkbox" name="filterField" value="B-Party"> B-Party</label>
-                        <label><input type="checkbox" name="filterField" value="Call Type"> Call Type</label>
-                        <label><input type="checkbox" name="filterField" value="Start Date"> Start Date</label>
-                        <label><input type="checkbox" name="filterField" value="Call Status"> Call Status</label>
-                    </div>
+                    <div class="filter-list" id="filterFieldList"></div>
                     <button id="filterApplyBtn" class="btn" type="button">Apply</button>
                 </div>
             </div>
