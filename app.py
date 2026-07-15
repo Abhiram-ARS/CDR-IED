@@ -1,3 +1,13 @@
+"""
+===============================================================================
+Project Name : CDR-IED, all Detail Record Interpretation and Examination Dashboard
+File Name    : app.py
+
+Author       : Abhiram S (https://github.com/Abhiram-ARS)
+Version      : 1.0
+Last Edit    : 15-07-2026
+===============================================================================
+"""
 import sys
 from pathlib import Path
 import webview
