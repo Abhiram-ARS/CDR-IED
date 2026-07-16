@@ -11,8 +11,14 @@ Designed with scalability and usability in mind, CDR-IED supports efficient exam
 
 ---
 
-### Sample Interface
+### Sample Interface & Output
 
-<img width="1536" height="863" alt="image" src="https://github.com/user-attachments/assets/892c1a89-5598-4542-86eb-3bb5068c959c" />
+<img width="1536" height="816" alt="image" src="https://github.com/user-attachments/assets/599dbad3-a62e-4b76-bd6a-cb3e33153a5a" />
+
+<img width="1536" height="817" alt="image" src="https://github.com/user-attachments/assets/248f5f12-2a46-4340-94ae-9329eaf133a5" />
+
+<img width="1536" height="813" alt="image" src="https://github.com/user-attachments/assets/454ad0c6-0d1f-44f7-a8c9-e6d1ff853886" />
+
+<img width="1536" height="816" alt="image" src="https://github.com/user-attachments/assets/c5df31ce-f218-4430-b4b1-9099904fa174" />
 
 ---
